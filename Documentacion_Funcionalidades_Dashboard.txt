@@ -1,0 +1,148 @@
+================================================================================
+          DOCUMENTACIÓN TÉCNICA Y OPERATIVA: DASHBOARD NOC XCIEN SALTILLO
+================================================================================
+
+Este documento detalla la arquitectura, características y funcionalidades 
+implementadas en el Dashboard del Centro de Operaciones de Red (NOC) para la 
+red metropolitana basada en anillo de XCIEN en Saltillo.
+
+--------------------------------------------------------------------------------
+2. ARQUITECTURA DE RED SIMULADA
+--------------------------------------------------------------------------------
+TOPOLOGÍA FÍSICA:
+El transporte de red metropolitana se basa en un anillo redundante de fibra óptica:
+  RB6 (Paso de Flores - Nodo Central) -> RB5 (Ramos Arizpe Norte) -> 
+  RB8 (El Cortijo) -> RB9 (Arteaga) -> RB3 (Saltillo Oriente) -> 
+  RB7 (Saltillo Sur) -> RB4 (Zona Centro) -> RB6.
+
+EQUIPAMIENTO POR POP (NODO):
+Cada nodo de la red cuenta con tres capas de equipamiento lógico e interactivo:
+1. Capa de Óptica: Raisecom Passive OADM (Multiplexor óptico).
+2. Capa de Ruteo/Transporte: Router Raisecom RAX711-E (SNMP Agent).
+3. Capa de Acceso/Distribución: Switch Iscom5600-28C-EI (SNMP Agent).
+
+REDUNDANCIA Y CONVERGENCIA G.8032:
+El anillo de transporte implementa el protocolo ITU-T G.8032. 
+- En estado NORMAL, el enlace RPL (Ring Protection Link) entre RB6 y RB5 está 
+  bloqueado lógicamente por el RPL Owner (RB6) para evitar bucles.
+- En estado PROTECTED (simulado ante fallas o congestión excesiva), el enlace 
+  RPL se desbloquea en menos de 50 ms (convergencia promedio de 42 ms) para 
+  redirigir el tráfico y mantener la disponibilidad de la red metropolitana.
+
+--------------------------------------------------------------------------------
+3. DISTRIBUCIÓN DE INVENTARIO DE FIBRA ÓPTICA (48 HILOS)
+--------------------------------------------------------------------------------
+Cada nodo cuenta con una manguera de fibra de 48 hilos divididos de la siguiente forma:
+- Hilos 01-02: Transporte Principal (anillo activo, rotulados como Origen_Hilo_Destino).
+- Hilos 03-04: Protección del Anillo (standby redundancia G.8032).
+- Hilos 05-12: CWDM Empresarial (multiplexación pasiva para clientes corporativos, 
+  soporta hasta 9 lambdas/clientes por hilo).
+- Hilos 13-24: Expansión Futura (reserva apagada).
+- Hilos 25-48: GPON Acceso (enlazados a splitters pasivos con factor de división 
+  1:64 y conectados a los puertos del Switch Iscom5600).
+
+--------------------------------------------------------------------------------
+4. SEGMENTACIÓN LÓGICA VRF (MPLS L3VPN) Y DIRECCIONAMIENTO
+--------------------------------------------------------------------------------
+El tráfico de clientes se segmenta lógicamente mediante tres VRFs:
+
+1. VRF RED (Corporativo / Empresarial)
+   - Direccionamiento: Rango global 10.10.0.0/16 (ej. subred RB3: 10.10.3.0/24).
+   - Prioridad QoS: Alta (Clase Expedited Forwarding - EF, CIR 100% garantizado).
+2. VRF GREEN (PyME / Operaciones)
+   - Direccionamiento: Rango global 10.20.0.0/16 (ej. subred RB3: 10.20.3.0/24).
+   - Prioridad QoS: Media (Clase Assured Forwarding - AF21, CIR 50%).
+3. VRF BLUE (Micro / Residencial-negocio)
+   - Direccionamiento: Rango global 10.30.0.0/16 (ej. subred RB3: 10.30.3.0/24).
+   - Prioridad QoS: Baja (Best Effort - BE, CIR 0%).
+
+--------------------------------------------------------------------------------
+5. DETALLE DE LAS 8 PANTALLAS PRINCIPALES DEL DASHBOARD
+--------------------------------------------------------------------------------
+
+PANTALLA 1: VISTA GENERAL NOC
+- Mapa SVG interactivo de topología metropolitana con semáforos de uso en tiempo real.
+- KPIs principales: Clientes activos por VRF, Tráfico total acumulado de subida/bajada, 
+  porcentaje de Salud de Anillo (SLA) y utilización promedio de ISPs.
+- Estado detallado de convergencia y bloqueos del protocolo G.8032.
+- Tabla comparativa de todos los enlaces del anillo troncal.
+
+PANTALLA 2: MONITOREO DE ENLACES
+- Vista específica de ancho de banda contratado vs. utilizado (en Gbps) por tramo de fibra.
+- Monitoreo en tiempo real de métricas críticas: latencia (ms), pérdida de paquetes (%) 
+  y recuento de errores de CRC.
+- Semáforo de saturación automatizado:
+  * Verde: 0-50% (Uso óptimo)
+  * Amarillo: 51-70% (Prevención)
+  * Naranja: 71-85% (Planificación de expansión)
+  * Rojo: >85% (Saturación crítica)
+
+PANTALLA 3: MONITOREO DE FIBRA
+- Selector interactivo de PoP y matriz visual de los 48 hilos de fibra óptica.
+- Diagnóstico óptico por hilo: potencia de transmisión (TX en dBm), potencia de 
+  recepción (RX en dBm) y pérdida óptica/atenuación por splitter o conector (dB).
+- Detección de hilos con falla o degradación (atenuación > 3 dB o señal RX < -22 dBm).
+
+PANTALLA 4: MONITOREO SNMP (MIB / OIDs)
+- Tablero de agentes SNMP activos: routers Raisecom RAX e switches Iscom5600.
+- Desglose de uso de CPU (%), RAM (%), temperatura (°C) y Uptime de infraestructura.
+- Consola terminal interactiva: emula el uso de herramientas SNMPGET y SNMPWALK 
+  sobre variables del sistema de red, arrojando las respuestas crudas con OIDs reales.
+
+PANTALLA 5: VISTA VRF
+- Detalle de la tabla de ruteo L3VPN con valores de Route Distinguisher (RD) y 
+  Route Target (RT) por cada VRF.
+- Segmentos IP detallados por nodo y distribución del tráfico por PoP.
+- Tabla de circuitos virtuales / pseudowires MPLS activos e ID de VLAN externa.
+
+PANTALLA 6: VISTA DE CLIENTES
+- Desglose y segmentación del volumen total de clientes por VRF y regiones 
+  geográficas de Saltillo y Ramos Arizpe.
+- Gráficos de tendencias de crecimiento comercial a 6 meses.
+- Fichas de políticas de Calidad de Servicio (QoS).
+
+PANTALLA 7: VISTA ISP (INTERNET EXITS)
+- Monitoreo de balanceo de carga BGP en el Edge entre ISP0 (Telmex) e ISP1 (Cogent).
+- Simulador dinámico BGP: permite balancear el tráfico en tiempo real o inducir 
+  una caída de enlace para observar el re-ruteo (Failover) hacia el proveedor activo.
+- Gráficas de proyección de crecimiento de capacidad a 6 meses con alerta de umbral 80%.
+
+PANTALLA 8: ALERTAS NOC
+- Consola de Syslog y alertas activas en vivo (Live Traps) con su OID asociado.
+- Historial filtrable de alertas resueltas e históricas asociadas a eventos 
+  ópticos, temperatura, flapping de interfaces, caídas de ISP y pérdida de redundancia.
+
+--------------------------------------------------------------------------------
+6. DICCIONARIO DE OIDs IMPLEMENTADOS EN EL MONITOREO
+--------------------------------------------------------------------------------
+El sistema simula las variables MIB utilizando los siguientes Object Identifiers (OIDs):
+
+SISTEMA E INTERFACES (RFC 1213 MIB-II):
+- Uptime Global del Agente: <code>1.3.6.1.2.1.1.3.0</code>
+- Estado Operativo de Interfaz: <code>1.3.6.1.2.1.2.2.1.8.[index]</code> (1=up, 2=down)
+- Tráfico de Entrada (Octetos): <code>1.3.6.1.2.1.2.2.1.10.[index]</code>
+- Tráfico de Salida (Octetos): <code>1.3.6.1.2.1.2.2.1.16.[index]</code>
+- Errores de Entrada (CRC): <code>1.3.6.1.2.1.2.2.1.14.[index]</code>
+- Errores de Salida: <code>1.3.6.1.2.1.2.2.1.20.[index]</code>
+
+MÉTRICAS PRIVADAS DE ROUTERS (Raisecom RAX711-E):
+- Uso de CPU: <code>1.3.6.1.4.1.28282.1.1.1.0</code>
+- Uso de RAM: <code>1.3.6.1.4.1.28282.1.1.2.0</code>
+- Temperatura: <code>1.3.6.1.4.1.28282.1.1.3.0</code>
+
+MÉTRICAS PRIVADAS DE SWITCHES (Iscom5600):
+- Uso de CPU: <code>1.3.6.1.4.1.19318.1.1.1.0</code>
+- Uso de RAM: <code>1.3.6.1.4.1.19318.1.1.2.0</code>
+- Temperatura: <code>1.3.6.1.4.1.19318.1.1.3.0</code>
+
+--------------------------------------------------------------------------------
+7. SISTEMA DE FILTRADO GLOBAL
+--------------------------------------------------------------------------------
+El dashboard integra un motor de filtrado unificado (a través de la barra colapsable 
+🔍 Filtros) que actualiza el estado del dashboard:
+- Filtrar por Región o Nodo enfoca los gráficos y las tablas al área comercial o PoP.
+- Filtrar por VPN/VRF muestra únicamente los segmentos de direccionamiento IP 
+  y circuitos virtuales asociados a RED, GREEN o BLUE.
+- Filtrar por Estado o Equipo aísla las interfaces con alerta y agrupa agentes SNMP 
+  por fabricante (Raisecom o Iscom5600).
+================================================================================
