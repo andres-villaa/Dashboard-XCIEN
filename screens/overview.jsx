@@ -54,8 +54,8 @@ function Overview({ goToNode }) {
     <div>
       <div className="page-header">
         <div>
-          <div className="breadcrumb">Saltillo Metro · Centro de Operaciones de Red (NOC)</div>
-          <div className="page-title">Vista General del NOC</div>
+          <div className="breadcrumb">Saltillo Metro · Centro de Operaciones de Red</div>
+          <div className="page-title">Vista General</div>
           <div className="page-sub">Monitoreo de topología en anillo de Saltillo · G.8032 ERP · BGP Edge breakouts</div>
         </div>
         <div className="g8032-status-card">
@@ -118,7 +118,7 @@ function Overview({ goToNode }) {
             <span className="accent"></span>Mapa Interactivo de Topología — Saltillo & Ramos Arizpe
             <span className="right">Paso de Flores (RB6) Central PoP</span>
           </div>
-          
+
           <svg className="ring-svg" viewBox={`0 0 ${X.MAP.W} ${X.MAP.H}`}>
             {/* Grid background */}
             <g className="ring-bg-grid">
@@ -135,7 +135,7 @@ function Overview({ goToNode }) {
             {X.RING_LINKS.map((l, i) => {
               const a = nodeMap[l.a], b = nodeMap[l.b];
               if (!a || !b) return null;
-              
+
               // Semáforo color based on link utilization
               const color = getUtilColor(l.util);
               const isCritical = l.util > 85;
@@ -151,8 +151,8 @@ function Overview({ goToNode }) {
                     onMouseLeave={() => setHover(null)}
                   />
                   {/* Small link utilization badge in the middle */}
-                  <circle cx={(a.x + b.x)/2} cy={(a.y + b.y)/2} r="9" fill="#0a1a0c" stroke={color} strokeWidth="1" />
-                  <text x={(a.x + b.x)/2} y={(a.y + b.y)/2 + 3} textAnchor="middle" fill={color} fontSize="8" fontFamily="var(--mono)" fontWeight="bold">{l.util}</text>
+                  <circle cx={(a.x + b.x) / 2} cy={(a.y + b.y) / 2} r="9" fill="#0a1a0c" stroke={color} strokeWidth="1" />
+                  <text x={(a.x + b.x) / 2} y={(a.y + b.y) / 2 + 3} textAnchor="middle" fill={color} fontSize="8" fontFamily="var(--mono)" fontWeight="bold">{l.util}</text>
                 </g>
               );
             })}
@@ -178,10 +178,10 @@ function Overview({ goToNode }) {
               const nodeColor = getNodeColor(n);
               return (
                 <g key={n.id} style={{ cursor: "pointer" }}
-                   onClick={() => goToNode(n.id)}
-                   onMouseEnter={(e) => setHoverNode({ data: n, x: e.clientX, y: e.clientY })}
-                   onMouseMove={(e) => setHoverNode({ data: n, x: e.clientX, y: e.clientY })}
-                   onMouseLeave={() => setHoverNode(null)}>
+                  onClick={() => goToNode(n.id)}
+                  onMouseEnter={(e) => setHoverNode({ data: n, x: e.clientX, y: e.clientY })}
+                  onMouseMove={(e) => setHoverNode({ data: n, x: e.clientX, y: e.clientY })}
+                  onMouseLeave={() => setHoverNode(null)}>
                   <circle cx={n.x} cy={n.y} r="22" className="node-circle" style={{ stroke: nodeColor }} />
                   <text x={n.x} y={n.y + 4} className="node-label">{n.id}</text>
                   <text x={n.x} y={n.y + 36} className="node-sublabel">{n.location}</text>
@@ -233,7 +233,7 @@ function Overview({ goToNode }) {
             <SummaryRow label="Salidas Internet Up" value="2 / 2" tone="ok" />
             <SummaryRow label="Tráfico Total Consumido" value={`${X.KPIS.totalTraffic} Gbps`} tone="ok" />
           </div>
-          
+
           <div className="section-title" style={{ marginTop: 16, paddingBottom: 4 }}>Tráfico de Red Acumulado (24h)</div>
           <div style={{ height: 110 }}>
             <Sparkline data={totalTs} color="#00C853" width={320} height={110} />
@@ -269,8 +269,8 @@ function Overview({ goToNode }) {
                 <td><strong>{l.a} ↔ {l.b}</strong></td>
                 <td className="num muted">{l.km} km</td>
                 <td className="num">10 Gbps</td>
-                <td className="num">{(l.trafficIn/1000).toFixed(2)} Gbps</td>
-                <td className="num">{(l.trafficOut/1000).toFixed(2)} Gbps</td>
+                <td className="num">{(l.trafficIn / 1000).toFixed(2)} Gbps</td>
+                <td className="num">{(l.trafficOut / 1000).toFixed(2)} Gbps</td>
                 <td className="num">{l.latency} ms</td>
                 <td className="num">{l.loss > 0 ? `${(l.loss * 100).toFixed(2)}%` : "0%"}</td>
                 <td className="num">{l.errors}</td>

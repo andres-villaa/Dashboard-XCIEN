@@ -8,6 +8,25 @@ function FiberMonitoring() {
   const [statusFilter, setStatusFilter] = useStateFiber("all");
   const [selectedStrand, setSelectedStrand] = useStateFiber(null);
 
+  const getNomenclature = (s, node) => {
+    const swNum = Math.floor((s.strand - 1) / 4) + 1;
+    return `${node}_SW${swNum}_Hilo${s.strand}`;
+  };
+
+  const getPortsValue = (s) => {
+    if (s.strand >= 9 && s.strand <= 24) return "—";
+    const localStrandIndex = (s.strand - 1) % 4;
+    const startPort = localStrandIndex * 9 + 1;
+    const endPort = (localStrandIndex + 1) * 9;
+    return `[${startPort}-${endPort}]`;
+  };
+
+  const getTechnology = (s) => {
+    if (s.strand <= 8) return "Conexión Interna";
+    if (s.strand <= 24) return "Expansión Futura (Reservado)";
+    return "Conexión Clientes";
+  };
+
   const nodeFiber = useMemoFiber(() => {
     return X.FIBER[selectedNode] || [];
   }, [selectedNode]);
@@ -79,23 +98,23 @@ function FiberMonitoring() {
       <div className="alert-counts" style={{ marginBottom: 16 }}>
         <div className="alert-count" style={{ borderLeft: "3px solid var(--ink-3)" }}>
           <div className="num">{stats.total}</div>
-          <div className="lbl">Hilos<br/>Totales</div>
+          <div className="lbl">Hilos<br />Totales</div>
         </div>
         <div className="alert-count ok">
           <div className="num">{stats.ok}</div>
-          <div className="lbl">Hilos<br/>Óptimos</div>
+          <div className="lbl">Hilos<br />Óptimos</div>
         </div>
         <div className="alert-count warn">
           <div className="num">{stats.warning}</div>
-          <div className="lbl">Degradados<br/>(Alerta)</div>
+          <div className="lbl">Degradados<br />(Alerta)</div>
         </div>
         <div className="alert-count crit">
           <div className="num">{stats.critical}</div>
-          <div className="lbl">Críticos<br/>(&gt;3.0dB Loss)</div>
+          <div className="lbl">Críticos<br />(&gt;3.0dB Loss)</div>
         </div>
         <div className="alert-count" style={{ borderLeft: "3px solid #333" }}>
           <div className="num">{stats.inactive}</div>
-          <div className="lbl">Sin Usar<br/>(Expansión)</div>
+          <div className="lbl">Sin Usar<br />(Expansión)</div>
         </div>
       </div>
 
@@ -133,9 +152,9 @@ function FiberMonitoring() {
               const isSelected = activeStrand.strand === s.strand;
               const cls = getStrandClass(s);
               return (
-                <div key={s.strand} 
-                     className={`strand-box ${cls} ${isSelected ? "selected" : ""}`}
-                     onClick={() => setSelectedStrand(s.strand)}>
+                <div key={s.strand}
+                  className={`strand-box ${cls} ${isSelected ? "selected" : ""}`}
+                  onClick={() => setSelectedStrand(s.strand)}>
                   <div className="strand-header">
                     <span>H{String(s.strand).padStart(2, "0")}</span>
                   </div>
@@ -165,18 +184,18 @@ function FiberMonitoring() {
         <div className="panel">
           <div className="panel-title">
             <span className="accent" style={{ background: activeStrand.status === "critical" ? "var(--red)" : activeStrand.status === "warning" ? "var(--amber)" : "var(--green)" }}></span>
-            Detalle de Hilo · {activeStrand.label}
+            Detalle de Hilo · {getNomenclature(activeStrand, selectedNode)}
           </div>
 
           <div className="strand-detail-card">
-            <div className="detail-row"><span>Nomenclatura</span><strong>{activeStrand.label}</strong></div>
-            <div className="detail-row"><span>Propósito/Tecnología</span><span>{activeStrand.tech}</span></div>
-            <div className="detail-row"><span>Dispositivo OADM/Mux</span><span>{activeStrand.device}</span></div>
-            <div className="detail-row"><span>Número de Hilo</span><span>Hilo #{activeStrand.strand}</span></div>
+            <div className="detail-row"><span>Nomenclatura</span><strong>{getNomenclature(activeStrand, selectedNode)}</strong></div>
+            <div className="detail-row"><span>Propósito/Tecnología</span><span>{getTechnology(activeStrand)}</span></div>
+            <div className="detail-row"><span>Ports</span><span>{getPortsValue(activeStrand)}</span></div>
+            <div className="detail-row"><span>Ancho de Banda</span><span>{activeStrand.strand <= 4 ? "10 Gbps" : activeStrand.strand <= 12 ? "1 Gbps" : activeStrand.strand <= 24 ? "—" : "2.5 Gbps"}</span></div>
             <div className="detail-row"><span>Estado Óptico</span><span style={{ color: activeStrand.status === "critical" ? "var(--red)" : activeStrand.status === "warning" ? "var(--amber)" : "var(--green-2)", fontWeight: "bold" }}>{getSignalStatusText(activeStrand)}</span></div>
-            
+
             <div className="section-title" style={{ marginTop: 14 }}>Monitoreo de Potencia Óptica</div>
-            
+
             <div className="optical-meters">
               <div className="meter-box">
                 <span className="lbl">Potencia TX</span>
@@ -203,7 +222,7 @@ function FiberMonitoring() {
 
             {activeStrand.max > 0 && (
               <div style={{ marginTop: 14 }}>
-                <div className="section-title">Clientes / Splitter Ocupación</div>
+                <div className="section-title">OADM</div>
                 <div className="detail-row"><span>Clientes Conectados</span><span>{activeStrand.clients} / {activeStrand.max}</span></div>
                 <div className="detail-row" style={{ border: 0, paddingBottom: 0 }}>
                   <span>Tasa de Ocupación</span>

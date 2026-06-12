@@ -3,21 +3,26 @@ const { useState: useStateApp } = React;
 
 function Sidebar({ screen, setScreen }) {
   const items = [
-    { group: "NOC OPERACIONES", entries: [
-      { id: "overview", label: "Vista General NOC", icon: "dashboard" },
-      { id: "links", label: "Monitoreo de Enlaces", icon: "lan" },
-      { id: "fiber", label: "Monitoreo de Fibra", icon: "cable" },
-      { id: "snmp", label: "Monitoreo SNMP", icon: "terminal" },
-      { id: "alerts", label: "Alertas NOC", icon: "warning", badge: 8 },
-    ]},
-    { group: "SERVICIOS Y CAPACIDAD", entries: [
-      { id: "vrfs", label: "Vista VRF L3VPN", icon: "hub" },
-      { id: "clients", label: "Vista de Clientes", icon: "people" },
-      { id: "internet", label: "Vista ISP (Salidas)", icon: "public" },
-    ]},
-    { group: "PoPs (NODOS METRO)", entries: window.XCIEN.NODES.map((n) => ({
-      id: `node:${n.id}`, label: `${n.id} · ${n.location}`, icon: "router",
-    })) },
+    {
+      group: "OPERACIONES", entries: [
+        { id: "overview", label: "Vista General", icon: "dashboard" },
+        { id: "links", label: "Monitoreo de Enlaces", icon: "lan" },
+        { id: "fiber", label: "Monitoreo de Fibra", icon: "cable" },
+        { id: "alerts", label: "Alertas", icon: "warning", badge: 8 },
+      ]
+    },
+    {
+      group: "SERVICIOS Y CAPACIDAD", entries: [
+        { id: "vrfs", label: "Vista VRF L3VPN", icon: "hub" },
+        { id: "clients", label: "Vista de Clientes", icon: "people" },
+        { id: "internet", label: "Vista ISP (Salidas)", icon: "public" },
+      ]
+    },
+    {
+      group: "PoPs (NODOS METRO)", entries: window.XCIEN.NODES.map((n) => ({
+        id: `node:${n.id}`, label: `${n.id} · ${n.location}`, icon: "router",
+      }))
+    },
   ];
 
   return (
@@ -27,8 +32,8 @@ function Sidebar({ screen, setScreen }) {
           <div className="nav-label">{g.group}</div>
           {g.entries.map((e) => (
             <div key={e.id}
-                 className={`nav-item ${screen === e.id ? "active" : ""}`}
-                 onClick={() => setScreen(e.id)}>
+              className={`nav-item ${screen === e.id ? "active" : ""}`}
+              onClick={() => setScreen(e.id)}>
               <span className="material-icons ico">{e.icon}</span>
               <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.label}</span>
               {e.badge && <span className="badge">{e.badge}</span>}
@@ -37,7 +42,7 @@ function Sidebar({ screen, setScreen }) {
         </div>
       ))}
       <div style={{ padding: "12px", borderTop: "1px solid var(--line)", marginTop: 12, fontSize: 10, color: "var(--ink-3)", fontFamily: "var(--mono)", letterSpacing: "0.1em" }}>
-        v2.0 · Saltillo NOC<br/>
+        v2.0 · Saltillo<br />
         Build #2026.05.28
       </div>
     </div>
@@ -48,7 +53,7 @@ function App() {
   const X = window.XCIEN;
   const [screen, setScreen] = useStateApp("overview");
   const [range, setRange] = useStateApp("24h");
-  
+
   // Global filters state
   const [showFilters, setShowFilters] = useStateApp(false);
   const [filters, setFilters] = useStateApp({
@@ -83,7 +88,7 @@ function App() {
   const handleFilterChange = (key, value) => {
     setFilters(prev => {
       const next = { ...prev, [key]: value };
-      
+
       // Auto-trigger screen changes if node/ISP filter is selected globally
       if (key === "node" && value !== "all") {
         setScreen(`node:${value}`);
@@ -102,8 +107,6 @@ function App() {
     content = <LinksMonitoring globalFilters={filters} />;
   } else if (screen === "fiber") {
     content = <FiberMonitoring globalFilters={filters} />;
-  } else if (screen === "snmp") {
-    content = <SnmpMonitoring globalFilters={filters} />;
   } else if (screen === "vrfs") {
     content = <VRFs globalFilters={filters} />;
   } else if (screen === "clients") {
@@ -126,13 +129,11 @@ function App() {
         <div className="brand">
           <div className="brand-mark">X</div>
           <div className="brand-text">
-            <small>XCIEN · NOC</small>
-            Saltillo Metro NOC
+            <small>XCIEN</small>
+            DASHBOARD SALTILLO
           </div>
         </div>
-        
-        <div className="topbar-title">SALTILLO METROPOLITAN CARRIER RING</div>
-        
+
         <div className="topbar-spacer"></div>
 
         <button className={`btn filter-toggle-btn ${activeFiltersCount > 0 ? "active" : ""}`} onClick={() => setShowFilters(!showFilters)}>
@@ -236,7 +237,7 @@ function App() {
               <input type="date" className="filter-input" value={filters.date} onChange={(e) => handleFilterChange("date", e.target.value)} />
             </div>
           </div>
-          
+
           <div className="filter-actions-bar">
             <span>Filtros activos: <strong>{activeFiltersCount}</strong></span>
             <button className="btn" onClick={resetFilters}>Limpiar Filtros</button>
